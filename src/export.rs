@@ -4,7 +4,11 @@ use std::time::Duration;
 
 use tokio::{sync::mpsc::UnboundedReceiver, time::interval};
 
-use crate::{client::NoopClient, dispatch::LogEvent, CloudWatchClient};
+use crate::{
+    client::{NoopClient, PutLogsError},
+    dispatch::LogEvent,
+    CloudWatchClient,
+};
 
 /// Configurations to control the behavior of exporting logs to CloudWatch.
 #[derive(Debug, Clone)]
@@ -135,11 +139,14 @@ where
 
             let logs = std::mem::take(&mut queue);
 
-            if let Err(err) = client.put_logs(config.destination.clone(), logs).await {
-                eprintln!(
-                    "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err:?} {:?}",
-                    config.destination
-                );
+            match client.put_logs(config.destination.clone(), logs).await {
+                Ok(_) | Err(PutLogsError::Cancelled) => {}
+                Err(err) => {
+                    eprintln!(
+                        "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err:?} {:?}",
+                        config.destination
+                    );
+                }
             }
         }
     }

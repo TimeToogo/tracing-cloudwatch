@@ -19,6 +19,8 @@ pub trait CloudWatchClient {
 pub enum PutLogsError {
     #[error("{message}")]
     LogDestinationNotFound { message: String },
+    #[error("async task was cancelled")]
+    Cancelled,
     #[error(transparent)]
     Other(#[from] anyhow::Error),
 }
