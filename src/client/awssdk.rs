@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use async_trait::async_trait;
 use aws_sdk_cloudwatchlogs::{
     error::SdkError, operation::put_log_events::PutLogEventsError, types::InputLogEvent,
@@ -19,7 +17,6 @@ impl CloudWatchClient for SdkClient {
         logs: Vec<LogEvent>,
     ) -> Result<(), PutLogsError> {
         let log_events = logs.into_iter().map(From::from).collect();
-
         match self
             .put_log_events()
             .set_log_events(Some(log_events))
@@ -42,16 +39,10 @@ impl CloudWatchClient for SdkClient {
                 }
                 err => Err(anyhow::Error::from(err).into()),
             },
-            Err(SdkError::DispatchFailure(dispatch))
-                if dispatch
-                    .as_connector_error()
-                    .and_then(|i| i.source())
-                    .and_then(|i| i.downcast_ref::<tokio::task::JoinError>())
-                    .is_some_and(|i| i.is_cancelled()) =>
-            {
-                Err(PutLogsError::Cancelled)
+            Err(err) if format!("{:?}", err).contains("cancelled") => Err(PutLogsError::Cancelled),
+            Err(err) => {
+                return Err(anyhow::Error::from(err).into());
             }
-            Err(err) => Err(anyhow::Error::from(err).into()),
         }
     }
 }
