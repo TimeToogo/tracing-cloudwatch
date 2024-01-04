@@ -7,6 +7,7 @@ use tokio::{sync::mpsc::UnboundedReceiver, time::interval};
 use crate::{
     client::{NoopClient, PutLogsError},
     dispatch::LogEvent,
+    util::print_debug,
     CloudWatchClient,
 };
 
@@ -142,10 +143,10 @@ where
             match client.put_logs(config.destination.clone(), logs).await {
                 Ok(_) | Err(PutLogsError::Cancelled) => {}
                 Err(err) => {
-                    eprintln!(
-                        "[tracing-cloudwatch] Unable to put logs to cloudwatch. Error: {err:?} {:?}",
+                    print_debug(format!(
+                        "Unable to put logs to cloudwatch. Error: {err:?} {:?}",
                         config.destination
-                    );
+                    ));
                 }
             }
         }

@@ -76,6 +76,7 @@ mod client;
 mod dispatch;
 mod export;
 mod layer;
+mod util;
 
 pub use client::CloudWatchClient;
 pub use export::{ExportConfig, LogDestination};

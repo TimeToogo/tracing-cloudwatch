@@ -32,7 +32,7 @@ impl CloudWatchClient for SdkClient {
         match self.put_log_events(input).await {
             Ok(response) => {
                 if let Some(rejected_info) = response.rejected_log_events_info {
-                    eprintln!("[tracing-cloudwatch] Put logs rejected: {rejected_info:?}")
+                    print_debug(format!("Put logs rejected: {rejected_info:?}"));
                 }
                 Ok(())
             }
