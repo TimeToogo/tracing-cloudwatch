@@ -8,6 +8,7 @@ use rusoto_logs::{
 use crate::{
     client::{CloudWatchClient, LogDestination, PutLogsError},
     dispatch::LogEvent,
+    util::print_debug,
 };
 
 #[async_trait]

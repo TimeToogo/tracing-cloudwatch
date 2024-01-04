@@ -7,6 +7,7 @@ use aws_sdk_cloudwatchlogs::{
 use crate::{
     client::{CloudWatchClient, LogDestination, PutLogsError},
     dispatch::LogEvent,
+    util::print_debug,
 };
 
 #[async_trait]
