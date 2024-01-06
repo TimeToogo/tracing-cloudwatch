@@ -1,10 +1,15 @@
+use std::sync::atomic::{Ordering, AtomicBool};
+
 use crate::{
     export::{BatchExporter, ExportConfig},
+    util::print_debug,
     CloudWatchClient,
 };
 
 use chrono::{DateTime, Utc};
 use tokio::sync::mpsc::{self, UnboundedSender};
+
+static HAS_ERROR: AtomicBool = AtomicBool::new(false);
 
 pub trait Dispatcher {
     fn dispatch(&self, input: LogEvent);
@@ -49,9 +54,14 @@ impl CloudWatchDispatcher {
 
 impl Dispatcher for CloudWatchDispatcher {
     fn dispatch(&self, event: LogEvent) {
-        self.tx
-            .send(event)
-            .expect("Unable to send log event. This is a bug");
+        if let Err(err) = self.tx.send(event) {
+            if HAS_ERROR.load(Ordering::Relaxed) {
+                return;
+            }
+
+            print_debug(format!("Unable to send log event. This is a bug: {err:?}"));
+            HAS_ERROR.store(true, Ordering::Relaxed);
+        }
     }
 }
 
